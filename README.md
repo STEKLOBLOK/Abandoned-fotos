@@ -1,9 +1,9 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>
-        Мой сайт
-    </title>
+    <p>
+        Пока только 1 фото
+    </p>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>

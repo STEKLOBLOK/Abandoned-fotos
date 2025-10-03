@@ -1,2 +1,4 @@
-# Abandoned-fotos
-Gallery for stalker fotos
+<p>
+	ТЕста ради кидаю какой-то текст
+</p>
+<img src='fon_1.png'>

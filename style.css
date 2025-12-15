@@ -377,6 +377,8 @@ body.dark-mode {
     display: flex;
     flex-direction: column;
     min-height: 0;
+    height: calc(100vh - 300px); /* Фиксированная высота для прокрутки */
+    max-height: 60vh; /* Ограничение максимальной высоты */
 }
 
 #image-container {
@@ -394,8 +396,9 @@ body.dark-mode {
     font-size: 1.15rem;
     line-height: 1.7;
     color: #e8f4ff;
-    min-height: 200px;
+    min-height: min-content; /* Изменено с 200px */
     padding-right: 10px;
+    word-wrap: break-word; /* Перенос длинных слов */
 }
 
 body.dark-mode #story-text {
@@ -743,6 +746,49 @@ body.dark-mode #story-text {
     margin-top: 20px;
 }
 /* ===== АДАПТИВНОСТЬ ===== */
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+    #game-container {
+        padding: 5px;
+        height: 100dvh; /* Используем динамическую высоту вьюпорта */
+    }
+    
+    #text-container {
+        height: calc(100dvh - 250px); /* Адаптивная высота */
+        margin: 8px;
+        padding: 15px;
+        font-size: 1rem;
+    }
+    
+    #story-text {
+        font-size: 1.05rem;
+        line-height: 1.6;
+    }
+    
+    .choice-btn {
+        padding: 14px 20px;
+        font-size: 0.95rem;
+        margin-bottom: 8px;
+    }
+    
+    #choices-container {
+        padding: 15px;
+        min-height: 150px;
+        margin: 0 8px;
+    }
+}
+
+/* Для очень маленьких экранов */
+@media (max-height: 600px) {
+    #text-container {
+        height: calc(100dvh - 220px);
+        padding: 12px;
+    }
+    
+    #story-text {
+        font-size: 0.95rem;
+    }
+}
 @media (max-width: 768px) {
     #game-container {
         padding: 10px;

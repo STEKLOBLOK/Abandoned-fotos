@@ -254,6 +254,23 @@ body.dark-mode {
 }
 
 /* ===== ЭКРАН ИНФОРМАЦИИ ===== */
+/* Исправление для экрана информации */
+#lore-screen {
+    overflow-y: auto; /* Включаем вертикальную прокрутку */
+    max-height: 100vh; /* Ограничиваем высоту экраном */
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.lore-text {
+    max-height: none; /* Убираем ограничение, если было */
+    overflow: visible; /* Убеждаемся, что контент виден */
+}
+
+/* Если это не поможет, добавьте также */
+#lore-screen .screen {
+    overflow-y: auto;
+}
 #lore-screen {
     align-items: center;
     padding: 30px;

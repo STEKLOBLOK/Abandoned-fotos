@@ -1,12 +1,182 @@
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <p>
-        Пока только 1 фото
-    </p>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>АТОМ-5: Закрытый город</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="https://img.icons8.com/color/96/atomic-spring.png">
 </head>
 <body>
-    <img src='fotos/fon_1.png'>
+    <!-- Главный контейнер -->
+    <div id="game-container">
+
+        <!-- ЭКРАН МЕНЮ -->
+        <div id="menu-screen" class="screen active">
+            <div class="title-container">
+                <h1>АТОМ<span class="highlight">-5</span></h1>
+                <p class="subtitle">Закрытый город. 1981 год.</p>
+                <div class="pixel-divider"></div>
+                <p class="year">Доступ: ████████</p>
+            </div>
+            <div class="menu-options">
+                <button class="menu-btn" onclick="startGame()">НАЧАТЬ ИГРУ</button>
+                <button class="menu-btn" onclick="showChapterSelect()">ВЫБРАТЬ ГЛАВУ</button>
+                <button class="menu-btn" onclick="showLore()">ИНФОРМАЦИЯ</button>
+                <button class="menu-btn" onclick="toggleDarkMode()">РЕЖИМ: СТАНДАРТ</button>
+            </div>
+            <div class="footer-note">
+                <p>Город Атом-5. ЗАТО №042. Все события вымышлены. Совпадения случайны.</p>
+                <p style="margin-top: 10px; font-size: 0.7rem; color: #555;">Версия: 1.0 | Геймплей: ~30 минут</p>
+            </div>
+        </div>
+
+        <!-- ЭКРАН ВЫБОРА ГЛАВЫ -->
+        <div id="chapter-screen" class="screen">
+            <h2>ДОСЬЕ. ВЫБОР ЭПИЗОДА</h2>
+            <div class="chapter-list">
+                <button class="chapter-btn" onclick="loadChapter(0)">ГЛАВА 1: Прибытие</button>
+                <button class="chapter-btn" onclick="loadChapter(1)">ГЛАВА 2: АРТЗ. Первая смена</button>
+                <button class="chapter-btn" onclick="loadChapter(2)">ГЛАВА 3: РЛК «ОКО-12»</button>
+                <button class="chapter-btn" onclick="loadChapter(3)">ГЛАВА 4: Инцидент на полигоне</button>
+                <button class="chapter-btn" onclick="loadChapter(4)">ГЛАВА 5: Решение</button>
+            </div>
+            <button class="back-btn" onclick="showMenu()">← В ГЛАВНОЕ МЕНЮ</button>
+        </div>
+
+        <!-- ЭКРАН ИНФОРМАЦИИ -->
+        <div id="lore-screen" class="screen">
+            <h2>СПРАВОЧНАЯ ИНФОРМАЦИЯ</h2>
+            <div class="lore-text">
+                <p><strong>АТОМ-5 (Городищево)</strong> — закрытый город, основан в XIX веке как посёлок при медном заводе.</p>
+                
+                <p><strong>Основные объекты:</strong></p>
+                <ul>
+                    <li><span class="highlight-text">АЭС Атом-5</span> — атомная электростанция с реакторами РБМК</li>
+                    <li><span class="highlight-text">АРТЗ</span> — Атомский Радиотехнический Завод</li>
+                    <li><span class="highlight-text">НИИ РАДиЭ</span> — Научно-исследовательский институт радиации и электроники</li>
+                    <li><span class="highlight-text">В/Ч 5543</span> — воинская часть ПВО</li>
+                    <li><span class="highlight-text">РЛК «ОКО-12»</span> — радиолокационный комплекс</li>
+                </ul>
+                
+                <p><strong>Главный герой:</strong> Игорь Семёнов, 24 года. Инженер-электронщик. Распределён на АРТЗ после института. Отец — бывший работник завода.</p>
+                
+                <p><strong>Время действия:</strong> апрель 1981 года. Холодная война на пике.</p>
+                
+                <div class="note-box">
+                    <p>⚠️ <strong>Внимание:</strong> В игре присутствуют ветвления сюжета. Ваши решения влияют на концовку.</p>
+                </div>
+            </div>
+            <button class="back-btn" onclick="showMenu()">← НАЗАД</button>
+        </div>
+
+        <!-- ОСНОВНОЙ ЭКРАН ИГРЫ -->
+        <div id="game-screen" class="screen">
+            <!-- Верхняя панель -->
+            <div id="game-header">
+                <div id="chapter-title">Глава 1: Прибытие</div>
+                <div id="location">КПП "Северный"</div>
+                <div id="datetime">17 АПРЕЛЯ 1981, 06:30</div>
+                <div id="karma-display">ДОВЕРИЕ: <span id="karma-value">50</span></div>
+            </div>
+
+            <!-- Область текста с возможностью вставки изображений -->
+            <div id="text-container">
+                <div id="image-container">
+                    <!-- Изображение будет вставляться здесь динамически -->
+                </div>
+                <div id="story-text">
+                    <!-- Текст будет вставляться здесь -->
+                </div>
+                <div id="typewriter-cursor">|</div>
+            </div>
+
+            <!-- Область выбора -->
+            <div id="choices-container">
+                <!-- Кнопки выбора будут появляться здесь -->
+            </div>
+
+            <!-- Нижняя панель -->
+            <div id="game-footer">
+                <div id="inventory">
+                    <span>ПРОПУСК:</span>
+                    <span id="pass-status" class="status-yes"> ДЕЙСТВ.</span>
+                    <span style="margin-left: 20px;">ДОКУМЕНТЫ:</span>
+                    <span id="docs-status" class="status-no"> НЕТ</span>
+                    <span style="margin-left: 20px;">КЛЮЧ:</span>
+                    <span id="key-status" class="status-no"> НЕТ</span>
+                </div>
+                <div id="hint">Принято решений: <span id="choice-count">0</span></div>
+            </div>
+        </div>
+
+        <!-- ЭКРАН КОНЦА ГЛАВЫ -->
+        <div id="chapter-end-screen" class="screen">
+            <div class="end-title">
+                <h2>ГЛАВА ЗАВЕРШЕНА</h2>
+                <p id="chapter-end-name">Глава 1: Прибытие</p>
+            </div>
+            
+            <div id="chapter-summary">
+                <div class="summary-box">
+                    <h3>СТАТИСТИКА ГЛАВЫ</h3>
+                    <p id="summary-text">Вы успешно прибыли в город Атом-5.</p>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Уровень доверия:</span>
+                            <span id="stat-karma" class="stat-value">50</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Секретных документов:</span>
+                            <span id="stat-docs" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Принято решений:</span>
+                            <span id="stat-choices" class="stat-value">5</span>
+                        </div>
+                    </div>
+                    
+                    <div id="achievements">
+                        <h4>ДОСТИЖЕНИЯ</h4>
+                        <p id="achv-list">Нет достижений</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="end-options">
+                <button class="menu-btn" onclick="continueGame()">ПРОДОЛЖИТЬ ИГРУ</button>
+                <button class="menu-btn" onclick="showChapterSelect()">ВЫБРАТЬ ГЛАВУ</button>
+                <button class="menu-btn" onclick="showMenu()">В ГЛАВНОЕ МЕНЮ</button>
+            </div>
+            
+            <div class="save-notice">
+                <p>Прогресс автоматически сохранён.</p>
+            </div>
+        </div>
+
+        <!-- ЭКРАН КОНЦОВКИ -->
+        <div id="ending-screen" class="screen">
+            <div class="ending-container">
+                <h2 id="ending-title">ИГРА ЗАВЕРШЕНА</h2>
+                <div id="ending-text">
+                    <!-- Текст концовки -->
+                </div>
+                <div id="ending-stats">
+                    <!-- Статистика -->
+                </div>
+                <div class="ending-options">
+                    <button class="menu-btn" onclick="showMenu()">В МЕНЮ</button>
+                    <button class="menu-btn" onclick="restartGame()">НАЧАТЬ ЗАНОВО</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>

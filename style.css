@@ -640,6 +640,10 @@ body.dark-mode #story-text {
 }
 
 /* ===== ЭКРАН КОНЦОВКИ ===== */
+#ending-screen, .ending-text {
+    overflow-y: auto !important;
+    max-height: 90vh !important;
+}
 #ending-screen {
     align-items: center;
     justify-content: center;

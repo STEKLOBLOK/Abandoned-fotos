@@ -1114,7 +1114,6 @@ async function typeTextWithDelays(parts) {
     isTyping = false;
 }
 
-// Печатает текст посимвольно с движущимся курсором
 async function typeText(text) {
     return new Promise(resolve => {
         if (!elements.storyText) return resolve();
@@ -1131,25 +1130,37 @@ async function typeText(text) {
             margin-left: 2px;
         `;
         
-        // Добавляем курсор в конец
         elements.storyText.appendChild(cursor);
         
-        const typing = setInterval(() => {
+        // Используем requestAnimationFrame для более плавной печати
+        function typeCharacter() {
             if (i < text.length) {
-                // Вставляем символ перед курсором
-                const textNode = document.createTextNode(text.charAt(i));
-                elements.storyText.insertBefore(textNode, cursor);
-                i++;
-                
-                // Прокручиваем контейнер к курсору
-                elements.storyText.parentElement.scrollTop = elements.storyText.parentElement.scrollHeight;
+                // Проверяем, активна ли вкладка
+                if (!document.hidden) {
+                    const textNode = document.createTextNode(text.charAt(i));
+                    elements.storyText.insertBefore(textNode, cursor);
+                    i++;
+                    
+                    // Прокрутка
+                    const textContainer = elements.storyText.parentElement;
+                    if (textContainer) {
+                        cursor.scrollIntoView({
+                            behavior: 'auto',
+                            block: 'nearest',
+                            inline: 'nearest'
+                        });
+                    }
+                }
+                // Продолжаем печать с правильной скоростью
+                setTimeout(() => requestAnimationFrame(typeCharacter), 30);
             } else {
-                clearInterval(typing);
-                // Убираем курсор когда текст напечатан
                 cursor.remove();
                 resolve();
             }
-        }, 30);
+        }
+        
+        // Запускаем печать
+        requestAnimationFrame(typeCharacter);
     });
 }
 

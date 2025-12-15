@@ -761,3 +761,6 @@ body.dark-mode #story-text {
         padding: 12px 18px;
     }
 }
+#chapter-screen {
+    overflow-y: auto;
+}

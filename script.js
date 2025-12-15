@@ -47,7 +47,7 @@ const chapters = [
         steps: [
             {
                 id: 0,
-                text: `АВТОБУС "ИКАРУС" ГЛУШИТ ДВИГАТЕЛЬ. Сквозь утренний туман прорезаются огни контрольно-пропускного пункта.\n\nВы — ИГОРЬ СЕМЁНОВ, 24 года. Молодой инженер-электронщик, распределённый на АРТЗ после Московского института. В кармане — пропуск с грифом "Совершенно секретно" и пожелтевшее письмо от отца, который работал здесь в 60-х: "Городищево — наш дом. И наша тюрьма. Будь осторожен".\n\nСолдат в шинели стучит костяшками пальцев по стеклу. Его лицо не выражает ничего, кроме усталости от ночной смены.`,
+                text: `АВТОБУС "ИКАРУС" ГЛУШИТ ДВИГАТЕЛЬ.[[DELAY:800]][[IMG:img/start.jpg]][[DELAY:400]]\n\nСквозь утренний туман прорезаются огни контрольно-пропускного пункта.\n\nВы — ИГОРЬ СЕМЁНОВ, 24 года. Молодой инженер-электронщик, распределённый на АРТЗ после Московского института. В кармане — пропуск с грифом "Совершенно секретно" и пожелтевшее письмо от отца, который работал здесь в 60-х: "Городищево — наш дом. И наша тюрьма. Будь осторожен".\n\nСолдат в шинели стучит костяшками пальцев по стеклу. Его лицо не выражает ничего, кроме усталости от ночной смены.`,
                 choices: [
                     { text: "Молча протянуть пропуск и документы", nextStep: 1, karma: 0, effect: () => { gameState.totalChoices++; } },
                     { text: "«Здравия желаю, товарищ старшина! Прибыл по распределению на АРТЗ»", nextStep: 2, karma: +5, effect: () => { gameState.totalChoices++; gameState.flags.trusted = true; } },
@@ -171,7 +171,7 @@ const chapters = [
             },
             {
                 id: 16,
-                text: `ПЛОЩАДЬ ЛЕНИНА. Туман рассеивается, открывая вид на монументальную статую вождя, ДК «Энергия» с огромными буквами и длинную серую панель горкома.\n\nЛюди спешат на работу. Из динамиков доносится бодрый голос диктора: «...перевыполним план первого квартала!»\n\nВы стоите с чемоданом, разглядывая свой новый дом. Город Атом-5.`,
+                text: `ПЛОЩАДЬ ЛЕНИНА. [[DELAY:800]][[IMG:img/lenin.jpg]][[DELAY:400]]\n\nТуман рассеивается, открывая вид на монументальную статую вождя, ДК «Энергия» с огромными буквами и длинную серую панель горкома.\n\nЛюди спешат на работу. Из динамиков доносится бодрый голос диктора: «...перевыполним план первого квартала!»\n\nВы стоите с чемоданом, разглядывая свой новый дом. Город Атом-5.`,
                 choices: [
                     { text: "Найти паспортный стол (дом №15)", nextStep: 19, karma: 0, effect: () => { gameState.totalChoices++; } },
                     { text: "Осмотреть площадь подробнее", nextStep: 20, karma: 0, effect: () => { gameState.totalChoices++; } }
@@ -1012,8 +1012,8 @@ function updateGameUI() {
     }
 }
 
-// Проиграть шаг
-function playStep() {
+// Новая версия playStep() с поддержкой задержек и изображений
+async function playStep() {
     const chapter = chapters[gameState.currentChapter];
     if (!chapter || !chapter.steps || gameState.currentStep >= chapter.steps.length) {
         endChapter();
@@ -1026,27 +1026,240 @@ function playStep() {
     if (elements.choicesContainer) elements.choicesContainer.innerHTML = "";
     if (elements.hintEl) elements.hintEl.textContent = "Идёт загрузка текста...";
     
-    // Напечатать текст
-    if (elements.storyText) {
-        elements.storyText.textContent = "";
-        isTyping = true;
-        let i = 0;
-        const text = currentStepData.text;
-        
-        typingInterval = setInterval(() => {
-            if (i < text.length) {
-                elements.storyText.textContent += text.charAt(i);
-                i++;
-            } else {
-                clearInterval(typingInterval);
-                isTyping = false;
-                showChoices();
-            }
-        }, 30); // Скорость печати
-    } else {
-        showChoices();
-    }
+    // Разбиваем текст на части по командам
+    const text = currentStepData.text;
+    const parts = splitTextByCommands(text);
+    
+    // Напечатать текст с задержками
+    await typeTextWithDelays(parts);
+    
+    // Показать выбор после завершения печати
+    showChoices();
 }
+
+// Разбивает текст на части с командами
+function splitTextByCommands(text) {
+    const parts = [];
+    let lastIndex = 0;
+    
+    // Регулярка для команд [[DELAY:X]] и [[IMG:URL]]
+    const commandRegex = /\[\[(DELAY:\d+|IMG:[^\]]+)\]\]/g;
+    let match;
+    
+    while ((match = commandRegex.exec(text)) !== null) {
+        // Текст до команды
+        if (match.index > lastIndex) {
+            parts.push({
+                type: 'text',
+                content: text.substring(lastIndex, match.index)
+            });
+        }
+        
+        // Сама команда
+        const command = match[1];
+        if (command.startsWith('DELAY:')) {
+            const delay = parseInt(command.substring(6));
+            parts.push({
+                type: 'delay',
+                duration: delay
+            });
+        } else if (command.startsWith('IMG:')) {
+            const imageUrl = command.substring(4).trim();
+            parts.push({
+                type: 'image',
+                url: imageUrl
+            });
+        }
+        
+        lastIndex = match.index + match[0].length;
+    }
+    
+    // Остаток текста после последней команды
+    if (lastIndex < text.length) {
+        parts.push({
+            type: 'text',
+            content: text.substring(lastIndex)
+        });
+    }
+    
+    return parts;
+}
+
+// Печатает текст с задержками и изображениями
+async function typeTextWithDelays(parts) {
+    if (!elements.storyText) return;
+    
+    elements.storyText.textContent = "";
+    isTyping = true;
+    
+    for (const part of parts) {
+        switch (part.type) {
+            case 'text':
+                await typeText(part.content);
+                break;
+                
+            case 'delay':
+                await wait(part.duration);
+                break;
+                
+            case 'image':
+                // Пауза перед изображением
+                await wait(500);
+                // Показываем изображение и ждем закрытия
+                await showImageAndWait(part.url);
+                break;
+        }
+    }
+    
+    isTyping = false;
+}
+
+// Печатает текст посимвольно с движущимся курсором
+async function typeText(text) {
+    return new Promise(resolve => {
+        if (!elements.storyText) return resolve();
+        
+        let i = 0;
+        const cursor = document.createElement('span');
+        cursor.id = 'typewriter-cursor';
+        cursor.textContent = '|';
+        cursor.style.cssText = `
+            display: inline;
+            animation: blink 1s infinite;
+            color: #00e5ff;
+            font-weight: bold;
+            margin-left: 2px;
+        `;
+        
+        // Добавляем курсор в конец
+        elements.storyText.appendChild(cursor);
+        
+        const typing = setInterval(() => {
+            if (i < text.length) {
+                // Вставляем символ перед курсором
+                const textNode = document.createTextNode(text.charAt(i));
+                elements.storyText.insertBefore(textNode, cursor);
+                i++;
+                
+                // Прокручиваем контейнер к курсору
+                elements.storyText.parentElement.scrollTop = elements.storyText.parentElement.scrollHeight;
+            } else {
+                clearInterval(typing);
+                // Убираем курсор когда текст напечатан
+                cursor.remove();
+                resolve();
+            }
+        }, 30);
+    });
+}
+
+// Ждет указанное время
+async function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Показывает изображение и ждет закрытия
+async function showImageAndWait(imageUrl) {
+    return new Promise(resolve => {
+        // Создаем контейнер
+        const imageContainer = document.createElement('div');
+        imageContainer.id = 'fullscreen-image';
+        imageContainer.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.5s;
+        `;
+        
+        // Изображение
+        const img = document.createElement('img');
+        img.src = imageUrl;
+        img.style.cssText = `
+            max-width: 90%;
+            max-height: 90%;
+            border: 2px solid #00a8ff;
+            box-shadow: 0 0 40px rgba(0, 168, 255, 0.7);
+            border-radius: 5px;
+            object-fit: contain;
+        `;
+        
+        // Кнопка закрытия
+        const closeBtn = document.createElement('div');
+        closeBtn.textContent = '✕';
+        closeBtn.style.cssText = `
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.5);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid white;
+            transition: all 0.3s;
+        `;
+        closeBtn.onmouseover = () => {
+            closeBtn.style.background = 'rgba(255, 0, 0, 0.7)';
+            closeBtn.style.transform = 'scale(1.1)';
+        };
+        closeBtn.onmouseout = () => {
+            closeBtn.style.background = 'rgba(0, 0, 0, 0.5)';
+            closeBtn.style.transform = 'scale(1)';
+        };
+        
+        imageContainer.appendChild(img);
+        imageContainer.appendChild(closeBtn);
+        document.body.appendChild(imageContainer);
+        
+        // Функция закрытия
+        const closeImage = () => {
+            imageContainer.style.animation = 'fadeOut 0.5s';
+            setTimeout(() => {
+                if (imageContainer.parentNode) {
+                    imageContainer.parentNode.removeChild(imageContainer);
+                }
+                resolve(); // Продолжаем выполнение
+            }, 500);
+        };
+        
+        // Закрытие по клику на крестик или изображение
+        closeBtn.addEventListener('click', closeImage);
+        imageContainer.addEventListener('click', (e) => {
+            if (e.target === imageContainer) {
+                closeImage();
+            }
+        });
+        
+        // Закрытие по Escape
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                closeImage();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+        
+        // Автоматическое закрытие через 10 секунд (на всякий случай)
+        setTimeout(() => {
+            if (document.getElementById('fullscreen-image')) {
+                closeImage();
+            }
+        }, 10000);
+    });
+}
+
 
 // Показать выбор
 function showChoices() {
@@ -1276,7 +1489,104 @@ window.onload = function() {
     console.log("АТОМ-5: Визуальная новелла загружена.");
     console.log("Доступные главы:", chapters.length);
     console.log("Управление: мышь, клавиатура для отладки (Ctrl+S)");
-};
+}
+// ========== СИСТЕМА ИЗОБРАЖЕНИЙ ==========
+function showImage(imageUrl, duration = 3000) {
+    // Создаем контейнер для изображения
+    const imageContainer = document.createElement('div');
+    imageContainer.id = 'fullscreen-image';
+    imageContainer.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        animation: fadeIn 0.5s;
+    `;
+    
+    // Создаем изображение
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.style.cssText = `
+        max-width: 90%;
+        max-height: 90%;
+        border: 2px solid #00a8ff;
+        box-shadow: 0 0 30px rgba(0, 168, 255, 0.5);
+        border-radius: 5px;
+        object-fit: contain;
+    `;
+    
+    imageContainer.appendChild(img);
+    document.body.appendChild(imageContainer);
+    
+    // Автоматическое скрытие через указанное время
+    if (duration > 0) {
+        setTimeout(() => {
+            hideImage();
+        }, duration);
+    }
+    
+    // Закрытие по клику
+    imageContainer.addEventListener('click', hideImage);
+}
+
+function hideImage() {
+    const imageContainer = document.getElementById('fullscreen-image');
+    if (imageContainer) {
+        imageContainer.style.animation = 'fadeOut 0.5s';
+        setTimeout(() => {
+            if (imageContainer.parentNode) {
+                imageContainer.parentNode.removeChild(imageContainer);
+            }
+        }, 500);
+    }
+}
+
+// Добавляем анимации в CSS (если их нет)
+function addImageAnimations() {
+    if (!document.querySelector('#image-animations')) {
+        const style = document.createElement('style');
+        style.id = 'image-animations';
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+// ========== ОБРАБОТКА КОМАНД В ТЕКСТЕ ==========
+function processTextCommands(text) {
+    let processedText = text;
+    
+    // Обработка изображений [[IMG:путь]]
+    const imgRegex = /\[\[IMG:(.*?)\]\]/g;
+    const imgMatches = [...text.matchAll(imgRegex)];
+    
+    imgMatches.forEach((match, index) => {
+        const imageUrl = match[1].trim();
+        processedText = processedText.replace(match[0], `\n["ФОТО № ${index + 1}"]\n`);
+        
+        // Показываем изображение с задержкой
+        setTimeout(() => {
+            showImage(imageUrl, 4000);
+        }, 1000 + (index * 500)); // Разная задержка для нескольких изображений
+    });
+    
+    return processedText;
+}
+// Инициализация при загрузке
+addImageAnimations();
 
 // Экспорт для отладки
 window.gameState = gameState;
